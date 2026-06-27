@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>뽀모도로</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f4f0;
+      color: #1a1a18;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: #888780;
+      letter-spacing: 0.08em;
+      margin-bottom: 2.5rem;
+    }
+
+    .timer-card {
+      background: #fff;
+      border-radius: 20px;
+      border: 0.5px solid #ddd;
+      padding: 2.5rem 3rem;
+      text-align: center;
+      width: 100%;
+      max-width: 380px;
+      margin-bottom: 1.5rem;
+    }
+
+    .mode-tabs {
+      display: flex;
+      gap: 0;
+      background: #f5f4f0;
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 2rem;
+    }
+
+    .mode-tab {
+      flex: 1;
+      font-size: 13px;
+      padding: 7px 0;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #888780;
+      font-weight: 400;
+      transition: all 0.15s;
+    }
+
+    .mode-tab.active {
+      background: #fff;
+      color: #1a1a18;
+      font-weight: 500;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .time-display {
+      font-size: 5.5rem;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      color: #1a1a18;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .session-label {
+      font-size: 13px;
+      color: #b4b2a9;
+      margin-bottom: 2rem;
+    }
+
+    .progress-bar {
+      height: 3px;
+      background: #f0efe9;
+      border-radius: 2px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #e24b4a;
+      border-radius: 2px;
+      transition: width 1s linear;
+      width: 0%;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn-main {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      background: #1a1a18;
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s, background 0.15s;
+    }
+
+    .btn-main:hover { background: #333; }
+    .btn-main:active { transform: scale(0.96); }
+
+    .btn-reset {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 0.5px solid #ddd;
+      background: transparent;
+      color: #888780;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+
+    .btn-reset:hover { background: #f0efe9; }
+
+    .log-section {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .log-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #1a1a18;
+    }
+
+    .log-count {
+      font-size: 13px;
+      color: #888780;
+    }
+
+    .log-input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .log-input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 0.5px solid #ddd;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #1a1a18;
+      background: #fff;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .log-input:focus { border-color: #888780; }
+    .log-input::placeholder { color: #b4b2a9; }
+
+    .btn-log {
+      padding: 10px 16px;
+      border: 0.5px solid #ddd;
+      border-radius: 10px;
+      background: #fff;
+      color: #1a1a18;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+
+    .btn-log:hover { background: #f5f4f0; }
+
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .log-item {
+      background: #fff;
+      border: 0.5px solid #e8e7e1;
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: slideIn 0.2s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .log-item-left { display: flex; align-items: center; gap: 10px; }
+
+    .log-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #e24b4a;
+      flex-shrink: 0;
+    }
+
+    .log-dot.break { background: #1d9e75; }
+
+    .log-item-text { font-size: 14px; color: #1a1a18; }
+
+    .log-item-meta {
+      font-size: 12px;
+      color: #b4b2a9;
+      text-align: right;
+    }
+
+    .log-empty {
+      font-size: 14px;
+      color: #b4b2a9;
+      text-align: center;
+      padding: 2rem 0;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1a1a18;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <h1>POMODORO</h1>
+
+  <div class="timer-card">
+    <div class="mode-tabs">
+      <button class="mode-tab active" data-mode="focus" onclick="setMode('focus')">집중</button>
+      <button class="mode-tab" data-mode="short" onclick="setMode('short')">짧은 휴식</button>
+      <button class="mode-tab" data-mode="long" onclick="setMode('long')">긴 휴식</button>
+    </div>
+
+    <div class="time-display" id="timeDisplay">25:00</div>
+    <div class="session-label" id="sessionLabel">오늘 0 세션 완료</div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn-reset" onclick="resetTimer()" title="초기화">↺</button>
+      <button class="btn-main" id="mainBtn" onclick="toggleTimer()">▶</button>
+      <button class="btn-reset" onclick="skipTimer()" title="건너뛰기">⏭</button>
+    </div>
+  </div>
+
+  <div class="log-section">
+    <div class="log-header">
+      <span class="log-title">집중 기록</span>
+      <span class="log-count" id="logCount">오늘 0개</span>
+    </div>
+    <div class="log-input-row">
+      <input type="text" class="log-input" id="logInput" placeholder="무엇을 했나요?" maxlength="60" />
+      <button class="btn-log" onclick="addLog()">기록</button>
+    </div>
+    <div class="log-list" id="logList">
+      <div class="log-empty">집중 세션을 완료하면 여기 기록됩니다.</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const MODES = {
+      focus: { label: '집중', seconds: 25 * 60, color: '#e24b4a' },
+      short: { label: '짧은 휴식', seconds: 5 * 60, color: '#1d9e75' },
+      long:  { label: '긴 휴식',  seconds: 15 * 60, color: '#185fa5' }
+    };
+
+    let mode = 'focus';
+    let totalSeconds = MODES.focus.seconds;
+    let remaining = totalSeconds;
+    let running = false;
+    let interval = null;
+    let sessions = 0;
+    let logs = [];
+    let lastCompletedMode = null;
+
+    const STORAGE_KEY = 'pomodoro_' + new Date().toDateString();
+
+    function loadStorage() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        sessions = saved.sessions || 0;
+        logs = saved.logs || [];
+      } catch(e) {}
+    }
+
+    function saveStorage() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ sessions, logs }));
+    }
+
+    function setMode(m) {
+      if (running) return;
+      mode = m;
+      totalSeconds = MODES[m].seconds;
+      remaining = totalSeconds;
+      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-mode="${m}"]`).classList.add('active');
+      document.querySelector('.progress-fill').style.background = MODES[m].color;
+      render();
+    }
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function render() {
+      const m = Math.floor(remaining / 60);
+      const s = remaining % 60;
+      document.getElementById('timeDisplay').textContent = pad(m) + ':' + pad(s);
+      document.getElementById('mainBtn').textContent = running ? '⏸' : '▶';
+      const pct = ((totalSeconds - remaining) / totalSeconds * 100).toFixed(1);
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('sessionLabel').textContent = `오늘 ${sessions} 세션 완료`;
+      document.getElementById('logCount').textContent = `오늘 ${logs.length}개`;
+    }
+
+    function renderLogs() {
+      const list = document.getElementById('logList');
+      if (logs.length === 0) {
+        list.innerHTML = '<div class="log-empty">집중 세션을 완료하면 여기 기록됩니다.</div>';
+        return;
+      }
+      list.innerHTML = [...logs].reverse().map(log => `
+        <div class="log-item">
+          <div class="log-item-left">
+            <div class="log-dot ${log.mode !== 'focus' ? 'break' : ''}"></div>
+            <span class="log-item-text">${escHtml(log.text)}</span>
+          </div>
+          <div class="log-item-meta">${log.time}<br>${log.modeLabel}</div>
+        </div>
+      `).join('');
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function toggleTimer() {
+      if (running) {
+        clearInterval(interval);
+        running = false;
+      } else {
+        running = true;
+        interval = setInterval(tick, 1000);
+      }
+      render();
+    }
+
+    function tick() {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        running = false;
+        remaining = 0;
+        onComplete();
+      }
+      render();
+    }
+
+    function onComplete() {
+      if (mode === 'focus') {
+        sessions++;
+        saveStorage();
+        showToast('🍅 집중 세션 완료!');
+        promptLog();
+      } else {
+        showToast('휴식 완료. 다시 집중해볼까요?');
+      }
+      lastCompletedMode = mode;
+      render();
+    }
+
+    function promptLog() {
+      document.getElementById('logInput').focus();
+    }
+
+    function addLog() {
+      const input = document.getElementById('logInput');
+      const text = input.value.trim();
+      if (!text) return;
+      const now = new Date();
+      logs.push({
+        text,
+        time: pad(now.getHours()) + ':' + pad(now.getMinutes()),
+        mode: lastCompletedMode || mode,
+        modeLabel: MODES[lastCompletedMode || mode].label
+      });
+      input.value = '';
+      saveStorage();
+      renderLogs();
+      render();
+    }
+
+    function resetTimer() {
+      clearInterval(interval);
+      running = false;
+      remaining = totalSeconds;
+      render();
+    }
+
+    function skipTimer() {
+      clearInterval(interval);
+      running = false;
+      remaining = 0;
+      onComplete();
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    document.getElementById('logInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addLog();
+    });
+
+    loadStorage();
+    render();
+    renderLogs();
+  </script>
+</body>
+</html>

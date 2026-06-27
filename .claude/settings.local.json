@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__bf42a12b-e54a-47c4-a90a-afa28d024bce__list_events",
+      "mcp__bf42a12b-e54a-47c4-a90a-afa28d024bce__update_event",
+      "mcp__visualize__read_me",
+      "mcp__visualize__show_widget",
+      "Bash(gh auth *)",
+      "PowerShell(gh auth status 2>&1)",
+      "WebSearch",
+      "mcp__0a3dfbe5-77da-4460-a495-3179a35ae25d__notion-create-pages",
+      "mcp__Claude_in_Chrome__navigate",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "mcp__Claude_in_Chrome__tabs_create_mcp",
+      "mcp__Claude_in_Chrome__computer",
+      "mcp__bf42a12b-e54a-47c4-a90a-afa28d024bce__create_event",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "WebFetch(domain:www.riss.kr)",
+      "WebFetch(domain:search.naver.com)",
+      "WebFetch(domain:www.rocketpunch.com)",
+      "mcp__0a3dfbe5-77da-4460-a495-3179a35ae25d__notion-search",
+      "PowerShell(winget install --id GitHub.cli)",
+      "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"User\"\\); gh auth status 2>&1)",
+      "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"User\"\\); cd \"C:\\\\Users\\\\Team_leader\\\\어치\" && git init && git add . && git commit -m \"Initial commit\" 2>&1)"
+    ]
+  }
+}
