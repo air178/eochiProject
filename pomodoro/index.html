@@ -269,6 +269,125 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
+    .voice-section {
+      width: 100%;
+      max-width: 380px;
+      margin-top: 1.5rem;
+    }
+
+    .settings-help {
+      font-size: 12px;
+      color: #888780;
+      line-height: 1.5;
+      margin-bottom: 0.75rem;
+    }
+
+    .calendar-settings {
+      background: #fff;
+      border: 0.5px solid #ddd;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 1rem;
+    }
+
+    .calendar-status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: #888780;
+      margin-bottom: 1rem;
+    }
+
+    .mic-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 0.5px solid #ddd;
+      background: #fff;
+      color: #1a1a18;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .mic-btn:hover { background: #f5f4f0; }
+
+    .mic-btn.recording {
+      background: #e24b4a;
+      color: #fff;
+      border-color: #e24b4a;
+      animation: pulse 1.2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(226,75,74,0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(226,75,74,0); }
+    }
+
+    .voice-transcript {
+      font-size: 13px;
+      color: #888780;
+      min-height: 1.2em;
+      margin-top: 0.75rem;
+      text-align: center;
+    }
+
+    .voice-preview {
+      background: #fff;
+      border: 0.5px solid #ddd;
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 1rem;
+    }
+
+    .preview-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .preview-row label {
+      width: 40px;
+      font-size: 13px;
+      color: #888780;
+      flex-shrink: 0;
+    }
+
+    .preview-row input {
+      flex: 1;
+      padding: 8px 10px;
+      border: 0.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #1a1a18;
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
+
+    .btn-main-small {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      background: #1a1a18;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-main-small:hover { background: #333; }
   </style>
 </head>
 <body>
@@ -309,8 +428,59 @@
     </div>
   </div>
 
+  <div class="voice-section">
+    <div class="log-header">
+      <span class="log-title">🎤 음성으로 캘린더 등록</span>
+      <button class="btn-log" onclick="toggleSettings()" title="설정">⚙️</button>
+    </div>
+
+    <div class="calendar-settings" id="calendarSettings" style="display:none;">
+      <p class="settings-help">
+        Google Cloud Console에서 발급받은 OAuth 클라이언트 ID(웹 애플리케이션)를 입력하세요.<br>
+        승인된 자바스크립트 원본에 이 페이지 주소(https:// 또는 http://localhost)를 등록해야 하고,
+        Calendar API 사용 설정이 필요합니다. file:// 로 연 페이지에서는 동작하지 않습니다.
+      </p>
+      <div class="log-input-row">
+        <input type="text" class="log-input" id="clientIdInput" placeholder="Google OAuth Client ID" />
+        <button class="btn-log" onclick="saveClientId()">저장</button>
+      </div>
+    </div>
+
+    <div class="calendar-status">
+      <span id="calendarStatusText">Google 캘린더 미연결</span>
+      <button class="btn-log" id="connectBtn" onclick="connectGoogle()">연결하기</button>
+    </div>
+
+    <button class="mic-btn" id="micBtn" onclick="toggleVoice()">🎤 눌러서 일정 말하기</button>
+    <div class="voice-transcript" id="voiceTranscript"></div>
+
+    <div class="voice-preview" id="voicePreview" style="display:none;">
+      <div class="preview-row">
+        <label>날짜</label>
+        <input type="date" id="previewDate" />
+      </div>
+      <div class="preview-row">
+        <label>시작</label>
+        <input type="time" id="previewStart" />
+      </div>
+      <div class="preview-row">
+        <label>종료</label>
+        <input type="time" id="previewEnd" />
+      </div>
+      <div class="preview-row">
+        <label>내용</label>
+        <input type="text" class="log-input" id="previewTitle" />
+      </div>
+      <div class="preview-actions">
+        <button class="btn-log" onclick="cancelPreview()">취소</button>
+        <button class="btn-main-small" onclick="confirmCreateEvent()">캘린더에 등록</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     const MODES = {
       focus: { label: '집중', seconds: 25 * 60, color: '#e24b4a' },
@@ -470,6 +640,318 @@
     loadStorage();
     render();
     renderLogs();
+
+    // ---- Google 캘린더 음성 등록 ----
+    const CLIENT_ID_KEY = 'gcal_voice_client_id';
+    const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+    const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
+    let tokenClient = null;
+    let accessToken = null;
+    let recognition = null;
+    let recognizing = false;
+    let pendingEvent = null;
+
+    function toggleSettings() {
+      const el = document.getElementById('calendarSettings');
+      const opening = el.style.display === 'none';
+      el.style.display = opening ? 'block' : 'none';
+      if (opening) {
+        document.getElementById('clientIdInput').value = localStorage.getItem(CLIENT_ID_KEY) || '';
+      }
+    }
+
+    function saveClientId() {
+      const val = document.getElementById('clientIdInput').value.trim();
+      if (!val) return;
+      localStorage.setItem(CLIENT_ID_KEY, val);
+      tokenClient = null;
+      accessToken = null;
+      updateCalendarStatus(false);
+      showToast('Client ID가 저장되었습니다');
+      initTokenClient();
+    }
+
+    function initTokenClient() {
+      const clientId = localStorage.getItem(CLIENT_ID_KEY);
+      if (!clientId || typeof google === 'undefined' || !google.accounts) return;
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: CALENDAR_SCOPE,
+        callback: (resp) => {
+          if (resp.error) {
+            showToast('Google 인증에 실패했습니다');
+            pendingEvent = null;
+            return;
+          }
+          accessToken = resp.access_token;
+          updateCalendarStatus(true);
+          if (pendingEvent) {
+            createCalendarEvent(pendingEvent);
+            pendingEvent = null;
+          }
+        }
+      });
+    }
+
+    function updateCalendarStatus(connected) {
+      document.getElementById('calendarStatusText').textContent =
+        connected ? '✅ Google 캘린더 연결됨' : 'Google 캘린더 미연결';
+      document.getElementById('connectBtn').textContent = connected ? '재연결' : '연결하기';
+    }
+
+    function connectGoogle() {
+      const clientId = localStorage.getItem(CLIENT_ID_KEY);
+      if (!clientId) {
+        showToast('먼저 ⚙️ 에서 Client ID를 입력하세요');
+        document.getElementById('calendarSettings').style.display = 'block';
+        return;
+      }
+      if (!tokenClient) initTokenClient();
+      if (tokenClient) tokenClient.requestAccessToken({ prompt: 'consent' });
+    }
+
+    function initRecognition() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return null;
+      const r = new SR();
+      r.lang = 'ko-KR';
+      r.interimResults = true;
+      r.continuous = false;
+      r.maxAlternatives = 1;
+      return r;
+    }
+
+    function toggleVoice() {
+      if (recognizing) {
+        recognition && recognition.stop();
+        return;
+      }
+      recognition = initRecognition();
+      if (!recognition) {
+        showToast('이 브라우저는 음성 인식을 지원하지 않습니다 (Chrome 권장)');
+        return;
+      }
+
+      const micBtn = document.getElementById('micBtn');
+      const transcriptEl = document.getElementById('voiceTranscript');
+      transcriptEl.textContent = '';
+
+      recognition.onstart = () => {
+        recognizing = true;
+        micBtn.classList.add('recording');
+        micBtn.textContent = '🔴 듣는 중... (다시 눌러 종료)';
+      };
+
+      recognition.onresult = (e) => {
+        let interim = '';
+        let final = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) final += t;
+          else interim += t;
+        }
+        transcriptEl.textContent = final || interim;
+        if (final) handleVoiceResult(final.trim());
+      };
+
+      recognition.onerror = (e) => {
+        showToast('음성 인식 오류: ' + e.error);
+      };
+
+      recognition.onend = () => {
+        recognizing = false;
+        micBtn.classList.remove('recording');
+        micBtn.textContent = '🎤 눌러서 일정 말하기';
+      };
+
+      recognition.start();
+    }
+
+    function handleVoiceResult(text) {
+      const parsed = parseVoiceText(text);
+      document.getElementById('voicePreview').style.display = 'block';
+      document.getElementById('previewDate').value = formatDateInput(parsed.date);
+      document.getElementById('previewStart').value = parsed.start;
+      document.getElementById('previewEnd').value = parsed.end;
+      document.getElementById('previewTitle').value = parsed.title || text;
+    }
+
+    function formatDateInput(d) {
+      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    }
+
+    function parseVoiceText(text) {
+      let work = text;
+      const now = new Date();
+      let date = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      if (/모레/.test(work)) {
+        date.setDate(date.getDate() + 2);
+        work = work.replace(/모레/g, '');
+      } else if (/글피/.test(work)) {
+        date.setDate(date.getDate() + 3);
+        work = work.replace(/글피/g, '');
+      } else if (/내일/.test(work)) {
+        date.setDate(date.getDate() + 1);
+        work = work.replace(/내일/g, '');
+      } else if (/오늘/.test(work)) {
+        work = work.replace(/오늘/g, '');
+      }
+
+      let m = work.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+      if (m) {
+        const month = parseInt(m[1], 10) - 1;
+        const day = parseInt(m[2], 10);
+        date = new Date(now.getFullYear(), month, day);
+        if (date < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+          date.setFullYear(date.getFullYear() + 1);
+        }
+        work = work.replace(m[0], '');
+      } else {
+        m = work.match(/(이번\s*주|다다음\s*주|다음\s*주)?\s*([일월화수목금토])요일/);
+        if (m) {
+          const target = WEEKDAYS.indexOf(m[2]);
+          let diff = (target - date.getDay() + 7) % 7;
+          if (m[1] && m[1].includes('다다음')) diff += 14;
+          else if (m[1] && m[1].includes('다음')) diff += 7;
+          date.setDate(date.getDate() + diff);
+          work = work.replace(m[0], '');
+        }
+      }
+
+      const timeRegex = /(오전|오후|아침|저녁|밤|낮)?\s*(\d{1,2})\s*시\s*(?:(\d{1,2})\s*분)?/g;
+      const matches = [...work.matchAll(timeRegex)];
+
+      function to24(marker, h, min, inherited) {
+        h = parseInt(h, 10);
+        min = min ? parseInt(min, 10) : 0;
+        // a bare "12시" inherited from the other side's AM/PM word is almost
+        // always meant as noon (e.g. "10시부터 12시까지"), not midnight
+        if (inherited && h === 12) return { h: 12, min };
+        if (marker === '오전' || marker === '아침') {
+          if (h === 12) h = 0;
+        } else if (marker === '오후' || marker === '저녁' || marker === '낮') {
+          if (h !== 12) h += 12;
+        } else if (marker === '밤') {
+          if (h === 12) h = 0;
+          else if (h < 12) h += 12;
+        }
+        return { h, min };
+      }
+
+      let startH = 9, startM = 0, endH = null, endM = null;
+      if (matches.length >= 1) {
+        const first = to24(matches[0][1], matches[0][2], matches[0][3]);
+        startH = first.h;
+        startM = first.min;
+      }
+      if (matches.length >= 2) {
+        const rawMarker = matches[1][1];
+        const second = to24(rawMarker || matches[0][1], matches[1][2], matches[1][3], !rawMarker);
+        endH = second.h;
+        endM = second.min;
+      }
+
+      work = work.replace(timeRegex, ' ');
+
+      let title = work
+        .replace(/부터|까지/g, ' ')
+        .replace(/에/g, ' ')
+        .replace(/(일정|약속)\s*(좀\s*)?(잡아|등록해|추가해|만들어)\s*(줘|줄래|주세요|해줘)?/g, ' ')
+        .replace(/(잡아|등록해|추가해|만들어)\s*(줘|줄래|주세요)?/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (!title) title = text;
+
+      const startStr = pad(startH) + ':' + pad(startM);
+      let endStr;
+      if (endH != null) {
+        endStr = pad(endH) + ':' + pad(endM);
+      } else {
+        const d = new Date();
+        d.setHours(startH, startM + 60, 0, 0);
+        endStr = pad(d.getHours()) + ':' + pad(d.getMinutes());
+      }
+
+      return { date, start: startStr, end: endStr, title };
+    }
+
+    function addOneHour(hhmm) {
+      const [h, min] = hhmm.split(':').map(Number);
+      const d = new Date();
+      d.setHours(h + 1, min, 0, 0);
+      return pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+
+    function cancelPreview() {
+      document.getElementById('voicePreview').style.display = 'none';
+      document.getElementById('voiceTranscript').textContent = '';
+    }
+
+    function confirmCreateEvent() {
+      const date = document.getElementById('previewDate').value;
+      const start = document.getElementById('previewStart').value;
+      const end = document.getElementById('previewEnd').value;
+      const title = document.getElementById('previewTitle').value.trim();
+
+      if (!date || !start || !title) {
+        showToast('날짜, 시작 시간, 내용을 확인해주세요');
+        return;
+      }
+
+      const eventPayload = {
+        summary: title,
+        start: { dateTime: `${date}T${start}:00`, timeZone: 'Asia/Seoul' },
+        end: { dateTime: `${date}T${end || addOneHour(start)}:00`, timeZone: 'Asia/Seoul' }
+      };
+
+      const clientId = localStorage.getItem(CLIENT_ID_KEY);
+      if (!clientId) {
+        showToast('먼저 ⚙️ 에서 Client ID를 입력하세요');
+        document.getElementById('calendarSettings').style.display = 'block';
+        return;
+      }
+
+      if (accessToken) {
+        createCalendarEvent(eventPayload);
+      } else {
+        pendingEvent = eventPayload;
+        if (!tokenClient) initTokenClient();
+        tokenClient.requestAccessToken({ prompt: '' });
+      }
+    }
+
+    function createCalendarEvent(eventPayload) {
+      fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + accessToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(eventPayload)
+      })
+        .then(res => {
+          if (!res.ok) {
+            if (res.status === 401) {
+              accessToken = null;
+              updateCalendarStatus(false);
+            }
+            throw new Error('요청 실패 (' + res.status + ')');
+          }
+          return res.json();
+        })
+        .then(() => {
+          showToast('📅 캘린더에 등록되었습니다');
+          cancelPreview();
+        })
+        .catch(err => {
+          showToast('등록 실패: ' + err.message);
+        });
+    }
+
+    window.addEventListener('load', initTokenClient);
   </script>
 </body>
 </html>
