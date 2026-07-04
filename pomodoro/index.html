@@ -269,7 +269,198 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
+    .schedule-section {
+      width: 100%;
+      max-width: 380px;
+      margin-top: 1.5rem;
+    }
+
+    .voice-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-voice {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 10px;
+      background: #185fa5;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+
+    .btn-voice:hover { background: #124a82; }
+
+    .btn-voice.listening {
+      background: #e24b4a;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .voice-status {
+      font-size: 13px;
+      color: #888780;
+    }
+
+    .schedule-form-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .schedule-input {
+      padding: 10px 14px;
+      border: 0.5px solid #ddd;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #1a1a18;
+      background: #fff;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .schedule-input:focus { border-color: #888780; }
+
+    .schedule-date, .schedule-time { flex: 1; min-width: 110px; }
+    .schedule-title { flex: 2; min-width: 140px; }
+
+    .schedule-dot { background: #185fa5; }
+
+    .btn-delete {
+      border: none;
+      background: transparent;
+      color: #b4b2a9;
+      font-size: 13px;
+      cursor: pointer;
+      margin-left: 8px;
+      padding: 2px;
+    }
+
+    .btn-delete:hover { color: #e24b4a; }
+
+    .voice-result {
+      background: #eef4fb;
+      border: 0.5px solid #cddcec;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 1rem;
+    }
+
+    .voice-transcript {
+      font-size: 13px;
+      color: #1a1a18;
+      margin-bottom: 10px;
+    }
+
+    .voice-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-quick, .btn-detail {
+      flex: 1;
+      min-width: 130px;
+      padding: 9px 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+
+    .btn-quick { background: #185fa5; color: #fff; }
+    .btn-quick:hover { background: #124a82; }
+
+    .btn-detail { background: #fff; color: #185fa5; border: 0.5px solid #185fa5; }
+    .btn-detail:hover { background: #f0f6fc; }
+
+    .schedule-detail-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .schedule-form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      gap: 8px;
+    }
+
+    .btn-toggle-detail {
+      border: none;
+      background: transparent;
+      color: #888780;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 4px 0;
+    }
+
+    .btn-toggle-detail:hover { color: #1a1a18; }
+
+    .schedule-sub {
+      font-size: 12px;
+      color: #888780;
+      margin-top: 2px;
+    }
+
+    .gcal-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-gcal {
+      padding: 8px 14px;
+      border: 0.5px solid #ddd;
+      border-radius: 10px;
+      background: #fff;
+      color: #1a1a18;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+
+    .btn-gcal:hover { background: #f5f4f0; }
+
+    .gcal-status {
+      font-size: 12px;
+      color: #b4b2a9;
+    }
+
+    .gcal-status.connected { color: #1d9e75; font-weight: 500; }
+
+    .schedule-link {
+      font-size: 11px;
+      color: #185fa5;
+      text-decoration: none;
+    }
+
+    .schedule-link:hover { text-decoration: underline; }
   </style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <h1>POMODORO</h1>
@@ -306,6 +497,49 @@
     </div>
     <div class="log-list" id="logList">
       <div class="log-empty">집중 세션을 완료하면 여기 기록됩니다.</div>
+    </div>
+  </div>
+
+  <div class="schedule-section">
+    <div class="log-header">
+      <span class="log-title">📅 일정</span>
+      <span class="log-count" id="scheduleCount">0개</span>
+    </div>
+
+    <div class="gcal-row">
+      <button class="btn-gcal" id="gcalBtn" onclick="connectGoogleCalendar()">🔗 Google 캘린더 연동</button>
+      <span class="gcal-status" id="gcalStatus">연동 안 됨</span>
+    </div>
+
+    <div class="voice-row">
+      <button class="btn-voice" id="voiceBtn" onclick="toggleVoiceInput()">🎤 음성으로 등록</button>
+      <span class="voice-status" id="voiceStatus"></span>
+    </div>
+
+    <div class="voice-result" id="voiceResult" style="display:none;">
+      <div class="voice-transcript" id="voiceTranscript"></div>
+      <div class="voice-actions">
+        <button class="btn-quick" onclick="quickAddFromVoice()">⚡ Quick Add Event</button>
+        <button class="btn-detail" onclick="detailedAddFromVoice()">📝 Create Detailed Event</button>
+      </div>
+    </div>
+
+    <div class="schedule-form-row">
+      <input type="date" id="scheduleDate" class="schedule-input schedule-date" />
+      <input type="time" id="scheduleTime" class="schedule-input schedule-time" />
+      <input type="text" id="scheduleTitle" class="schedule-input schedule-title" placeholder="일정 내용" maxlength="60" />
+    </div>
+    <div class="schedule-detail-row" id="scheduleDetailRow" style="display:none;">
+      <input type="text" id="scheduleLocation" class="schedule-input" placeholder="장소 (선택)" maxlength="60" />
+      <input type="text" id="scheduleMemo" class="schedule-input" placeholder="메모 (선택)" maxlength="120" />
+    </div>
+    <div class="schedule-form-actions">
+      <button class="btn-toggle-detail" id="toggleDetailBtn" onclick="toggleDetailFields()">+ 상세 정보</button>
+      <button class="btn-log" onclick="addSchedule()">등록</button>
+    </div>
+
+    <div class="schedule-list" id="scheduleList">
+      <div class="log-empty">등록된 일정이 없습니다.</div>
     </div>
   </div>
 
@@ -467,9 +701,367 @@
       if (e.key === 'Enter') addLog();
     });
 
+    // ---- Schedule (voice registration -> real Google Calendar) ----
+
+    // TODO: Google Cloud Console에서 발급받은 OAuth 2.0 클라이언트 ID(웹 애플리케이션)로 교체하세요.
+    // 1) https://console.cloud.google.com 에서 프로젝트 생성 후 "Google Calendar API" 사용 설정
+    // 2) OAuth 동의 화면 구성 (테스트 사용자로 본인 계정 추가하면 검수 없이 바로 사용 가능)
+    // 3) 사용자 인증 정보 > OAuth 클라이언트 ID > 웹 애플리케이션 생성
+    // 4) "승인된 자바스크립트 원본"에 이 페이지를 서빙할 주소(예: http://localhost:5500, https://your-domain) 등록
+    const GOOGLE_CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
+    const GOOGLE_CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+
+    const SCHEDULE_KEY = 'pomodoro_schedules';
+    let schedules = [];
+    let recognition = null;
+    let recognizing = false;
+    let lastParsed = null;
+    let lastTranscript = '';
+    let gcalTokenClient = null;
+    let gcalAccessToken = null;
+
+    function initGoogleTokenClient() {
+      if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+        setTimeout(initGoogleTokenClient, 300);
+        return;
+      }
+      gcalTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: GOOGLE_CALENDAR_SCOPE,
+        callback: (resp) => {
+          if (resp.error) {
+            showToast('구글 캘린더 연동 실패: ' + resp.error);
+            return;
+          }
+          gcalAccessToken = resp.access_token;
+          updateGcalStatus(true);
+          showToast('구글 캘린더에 연동되었습니다.');
+        }
+      });
+    }
+
+    function connectGoogleCalendar() {
+      if (GOOGLE_CLIENT_ID.startsWith('YOUR_CLIENT_ID')) {
+        showToast('먼저 코드 상단의 GOOGLE_CLIENT_ID를 설정해주세요.');
+        return;
+      }
+      if (!gcalTokenClient) {
+        showToast('Google 로그인 준비 중입니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+      gcalTokenClient.requestAccessToken({ prompt: gcalAccessToken ? '' : 'consent' });
+    }
+
+    function updateGcalStatus(connected) {
+      const el = document.getElementById('gcalStatus');
+      el.textContent = connected ? '✅ 연동됨' : '연동 안 됨';
+      el.classList.toggle('connected', connected);
+    }
+
+    function getTimeZone() {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Seoul';
+    }
+
+    async function insertGoogleCalendarEvent(resource) {
+      const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + gcalAccessToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(resource)
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err.error && err.error.message) || ('HTTP ' + res.status));
+      }
+      return res.json();
+    }
+
+    async function quickAddGoogleCalendarEvent(text) {
+      const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events/quickAdd?text=' + encodeURIComponent(text), {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + gcalAccessToken }
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err.error && err.error.message) || ('HTTP ' + res.status));
+      }
+      return res.json();
+    }
+
+    async function deleteGoogleCalendarEvent(eventId) {
+      await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events/' + encodeURIComponent(eventId), {
+        method: 'DELETE',
+        headers: { Authorization: 'Bearer ' + gcalAccessToken }
+      });
+    }
+
+    function buildEventResource(dateVal, timeVal, title, location, memo) {
+      const resource = { summary: title };
+      if (location) resource.location = location;
+      if (memo) resource.description = memo;
+      if (timeVal) {
+        const start = new Date(dateVal + 'T' + timeVal + ':00');
+        const end = new Date(start.getTime() + 60 * 60 * 1000);
+        const tz = getTimeZone();
+        resource.start = { dateTime: start.toISOString(), timeZone: tz };
+        resource.end = { dateTime: end.toISOString(), timeZone: tz };
+      } else {
+        const endDate = new Date(dateVal + 'T00:00:00');
+        endDate.setDate(endDate.getDate() + 1);
+        resource.start = { date: dateVal };
+        resource.end = { date: formatDateInput(endDate) };
+      }
+      return resource;
+    }
+
+    // Mirrors the created Google Calendar event into the on-page list for feedback.
+    function addLocalScheduleRecord(gEvent) {
+      const startVal = gEvent.start.dateTime || gEvent.start.date;
+      schedules.push({
+        id: gEvent.id,
+        date: startVal.slice(0, 10),
+        time: gEvent.start.dateTime ? startVal.slice(11, 16) : '',
+        title: gEvent.summary || '(제목 없음)',
+        location: gEvent.location || '',
+        memo: gEvent.description || '',
+        htmlLink: gEvent.htmlLink || ''
+      });
+      sortSchedules();
+      saveSchedules();
+      renderSchedules();
+    }
+
+    function formatDateInput(d) {
+      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    }
+
+    function formatDateLabel(dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return `${m}/${d}`;
+    }
+
+    function loadSchedules() {
+      try {
+        schedules = JSON.parse(localStorage.getItem(SCHEDULE_KEY) || '[]');
+      } catch (e) { schedules = []; }
+    }
+
+    function saveSchedules() {
+      localStorage.setItem(SCHEDULE_KEY, JSON.stringify(schedules));
+    }
+
+    function sortSchedules() {
+      schedules.sort((a, b) => (a.date + (a.time || '99:99')).localeCompare(b.date + (b.time || '99:99')));
+    }
+
+    function renderSchedules() {
+      document.getElementById('scheduleCount').textContent = `${schedules.length}개`;
+      const list = document.getElementById('scheduleList');
+      if (schedules.length === 0) {
+        list.innerHTML = '<div class="log-empty">등록된 일정이 없습니다.</div>';
+        return;
+      }
+      list.innerHTML = schedules.map(s => `
+        <div class="log-item">
+          <div class="log-item-left">
+            <div class="log-dot schedule-dot"></div>
+            <div>
+              <div class="log-item-text">${escHtml(s.title)}</div>
+              ${s.location ? `<div class="schedule-sub">📍 ${escHtml(s.location)}</div>` : ''}
+              ${s.memo ? `<div class="schedule-sub">📝 ${escHtml(s.memo)}</div>` : ''}
+            </div>
+          </div>
+          <div class="log-item-meta">
+            ${formatDateLabel(s.date)}${s.time ? ' ' + s.time : ''}
+            ${s.htmlLink ? `<br><a class="schedule-link" href="${s.htmlLink}" target="_blank" rel="noopener">캘린더에서 보기</a>` : ''}
+            <button class="btn-delete" onclick="deleteSchedule('${s.id}')" title="삭제">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function addSchedule() {
+      const dateVal = document.getElementById('scheduleDate').value;
+      const timeVal = document.getElementById('scheduleTime').value;
+      const title = document.getElementById('scheduleTitle').value.trim();
+      const location = document.getElementById('scheduleLocation').value.trim();
+      const memo = document.getElementById('scheduleMemo').value.trim();
+      if (!dateVal || !title) {
+        showToast('날짜와 내용을 입력해주세요.');
+        return;
+      }
+      if (!gcalAccessToken) {
+        showToast('먼저 Google 캘린더에 연동해주세요.');
+        return;
+      }
+      try {
+        const resource = buildEventResource(dateVal, timeVal, title, location, memo);
+        const created = await insertGoogleCalendarEvent(resource);
+        addLocalScheduleRecord(created);
+        document.getElementById('scheduleTitle').value = '';
+        document.getElementById('scheduleLocation').value = '';
+        document.getElementById('scheduleMemo').value = '';
+        showToast('Google 캘린더에 일정이 등록되었습니다.');
+      } catch (e) {
+        showToast('등록 실패: ' + e.message);
+      }
+    }
+
+    async function deleteSchedule(id) {
+      if (gcalAccessToken) {
+        try { await deleteGoogleCalendarEvent(id); } catch (e) {}
+      }
+      schedules = schedules.filter(s => s.id !== id);
+      saveSchedules();
+      renderSchedules();
+    }
+
+    function toggleDetailFields() {
+      const row = document.getElementById('scheduleDetailRow');
+      const btn = document.getElementById('toggleDetailBtn');
+      const showing = row.style.display === 'flex';
+      row.style.display = showing ? 'none' : 'flex';
+      btn.textContent = showing ? '+ 상세 정보' : '- 상세 정보';
+    }
+
+    // Parse Korean speech like "내일 오후 3시 팀 회의" into date/time/title.
+    function parseScheduleSpeech(text) {
+      let t = text.trim();
+      const now = new Date();
+      let date = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+      if (/모레/.test(t)) {
+        date.setDate(date.getDate() + 2);
+        t = t.replace(/모레/g, '');
+      } else if (/내일/.test(t)) {
+        date.setDate(date.getDate() + 1);
+        t = t.replace(/내일/g, '');
+      } else if (/오늘/.test(t)) {
+        t = t.replace(/오늘/g, '');
+      } else {
+        const weekdayMatch = t.match(/(다음\s*주\s*)?(월|화|수|목|금|토|일)요일/);
+        if (weekdayMatch) {
+          const targetDay = dayNames.indexOf(weekdayMatch[2]);
+          let diff = (targetDay - date.getDay() + 7) % 7;
+          if (diff === 0 || weekdayMatch[1]) diff += 7;
+          date.setDate(date.getDate() + diff);
+          t = t.replace(weekdayMatch[0], '');
+        }
+      }
+
+      const mdMatch = t.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+      if (mdMatch) {
+        date = new Date(now.getFullYear(), parseInt(mdMatch[1], 10) - 1, parseInt(mdMatch[2], 10));
+        t = t.replace(mdMatch[0], '');
+      }
+
+      let hour = null, minute = 0;
+      const timeMatch = t.match(/(오전|오후)?\s*(\d{1,2})\s*시\s*(반|(\d{1,2})\s*분)?/);
+      if (timeMatch) {
+        hour = parseInt(timeMatch[2], 10);
+        if (timeMatch[3] === '반') minute = 30;
+        else if (timeMatch[4]) minute = parseInt(timeMatch[4], 10);
+        if (timeMatch[1] === '오후' && hour < 12) hour += 12;
+        if (timeMatch[1] === '오전' && hour === 12) hour = 0;
+        t = t.replace(timeMatch[0], '');
+      }
+
+      t = t.replace(/에는?\s*$/, '').replace(/^\s*,?\s*/, '').replace(/\s{2,}/g, ' ').trim();
+
+      return { date, hour, minute, title: t || text.trim() };
+    }
+
+    function toggleVoiceInput() {
+      if (recognizing) {
+        recognition && recognition.stop();
+        return;
+      }
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        showToast('이 브라우저는 음성 인식을 지원하지 않습니다.');
+        return;
+      }
+      recognition = new SR();
+      recognition.lang = 'ko-KR';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        recognizing = true;
+        document.getElementById('voiceBtn').classList.add('listening');
+        document.getElementById('voiceBtn').textContent = '⏹ 듣는 중...';
+        document.getElementById('voiceStatus').textContent = '';
+      };
+
+      recognition.onerror = (e) => {
+        showToast('음성 인식 오류: ' + e.error);
+      };
+
+      recognition.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        lastTranscript = transcript;
+        lastParsed = parseScheduleSpeech(transcript);
+        document.getElementById('voiceTranscript').textContent = `"${transcript}"`;
+        document.getElementById('voiceResult').style.display = 'block';
+      };
+
+      recognition.onend = () => {
+        recognizing = false;
+        document.getElementById('voiceBtn').classList.remove('listening');
+        document.getElementById('voiceBtn').textContent = '🎤 음성으로 등록';
+      };
+
+      recognition.start();
+    }
+
+    function hideVoiceResult() {
+      document.getElementById('voiceResult').style.display = 'none';
+      document.getElementById('voiceStatus').textContent = '';
+    }
+
+    // Quick Add Event: sends the raw transcript to Google Calendar's quickAdd endpoint,
+    // which does its own natural-language parsing of the date/time/title.
+    async function quickAddFromVoice() {
+      if (!lastTranscript) return;
+      if (!gcalAccessToken) {
+        showToast('먼저 Google 캘린더에 연동해주세요.');
+        return;
+      }
+      try {
+        const created = await quickAddGoogleCalendarEvent(lastTranscript);
+        addLocalScheduleRecord(created);
+        hideVoiceResult();
+        showToast('Google 캘린더에 일정이 등록되었습니다.');
+      } catch (e) {
+        showToast('등록 실패: ' + e.message);
+      }
+    }
+
+    // Create Detailed Event: prefill the form and reveal location/memo fields for review before saving.
+    function detailedAddFromVoice() {
+      if (!lastParsed) return;
+      document.getElementById('scheduleDate').value = formatDateInput(lastParsed.date);
+      if (lastParsed.hour !== null) {
+        document.getElementById('scheduleTime').value = pad(lastParsed.hour) + ':' + pad(lastParsed.minute);
+      }
+      document.getElementById('scheduleTitle').value = lastParsed.title;
+      document.getElementById('scheduleDetailRow').style.display = 'flex';
+      document.getElementById('toggleDetailBtn').textContent = '- 상세 정보';
+      document.getElementById('scheduleTitle').focus();
+      hideVoiceResult();
+    }
+
     loadStorage();
     render();
     renderLogs();
+    loadSchedules();
+    document.getElementById('scheduleDate').value = formatDateInput(new Date());
+    sortSchedules();
+    renderSchedules();
+    initGoogleTokenClient();
   </script>
 </body>
 </html>
