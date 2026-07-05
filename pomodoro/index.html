@@ -314,6 +314,14 @@
       color: #888780;
     }
 
+    .voice-fallback-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .voice-fallback-row .schedule-input { flex: 1; }
+
     .schedule-form-row {
       display: flex;
       gap: 8px;
@@ -514,6 +522,11 @@
     <div class="voice-row">
       <button class="btn-voice" id="voiceBtn" onclick="toggleVoiceInput()">🎤 음성으로 등록</button>
       <span class="voice-status" id="voiceStatus"></span>
+    </div>
+
+    <div class="voice-fallback-row">
+      <input type="text" id="voiceFallbackInput" class="schedule-input" placeholder="아이폰은 키보드 마이크로 여기에 받아쓰기" maxlength="120" />
+      <button class="btn-log" onclick="analyzeFallbackText()">분석</button>
     </div>
 
     <div class="voice-result" id="voiceResult" style="display:none;">
@@ -978,7 +991,7 @@
       }
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SR) {
-        showToast('이 브라우저는 음성 인식을 지원하지 않습니다.');
+        showToast('이 브라우저는 음성 인식을 지원하지 않습니다. 아래 받아쓰기 입력을 이용해주세요.');
         return;
       }
       recognition = new SR();
@@ -1017,6 +1030,22 @@
     function hideVoiceResult() {
       document.getElementById('voiceResult').style.display = 'none';
       document.getElementById('voiceStatus').textContent = '';
+    }
+
+    // iOS Safari has no SpeechRecognition API, but the OS keyboard's dictation button
+    // works in any text input — this feeds that dictated text through the same parser.
+    function analyzeFallbackText() {
+      const input = document.getElementById('voiceFallbackInput');
+      const text = input.value.trim();
+      if (!text) {
+        showToast('받아쓰기한 내용을 입력해주세요.');
+        return;
+      }
+      lastTranscript = text;
+      lastParsed = parseScheduleSpeech(text);
+      document.getElementById('voiceTranscript').textContent = `"${text}"`;
+      document.getElementById('voiceResult').style.display = 'block';
+      input.value = '';
     }
 
     // Quick Add Event: sends the raw transcript to Google Calendar's quickAdd endpoint,
